@@ -3,8 +3,6 @@ import os
 
 import unstructured_pytesseract
 unstructured_pytesseract.pytesseract.tesseract_cmd = r'D:\s\tesseract\New folder\tesseract.exe'
-
-
 os.environ["PATH"] += os.pathsep + r'D:\s\poppler\New folder\poppler-26.02.0\Library\bin'
 
 output_path = "./content/"
