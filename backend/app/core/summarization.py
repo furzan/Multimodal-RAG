@@ -2,21 +2,37 @@ import base64
 import logging
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from app.config import settings
 logger = logging.getLogger(__name__)
 
-_groq_llm: ChatGroq | None = None
+_ollama_llm: ChatOllama | None = None
 _gemini_vision_llm: ChatGoogleGenerativeAI | None = None
 
 
-def _get_groq_llm() -> ChatGroq:
-    global _groq_llm
-    if _groq_llm is None:
-        if not settings.groq_api_key:
-            raise RuntimeError("GROQ_API_KEY is not set. Add it to your .env file.")
-        _groq_llm = ChatGroq(model=settings.groq_llm_model, temperature=0)
-    return _groq_llm
+def _response_text(content: str | list) -> str:
+    if isinstance(content, str):
+        return content.strip()
+
+    text_parts = []
+    for block in content:
+        if isinstance(block, str):
+            text_parts.append(block)
+        elif isinstance(block, dict) and isinstance(block.get("text"), str):
+            text_parts.append(block["text"])
+
+    return "".join(text_parts).strip()
+
+
+def _get_ollama_llm() -> ChatOllama:
+    global _ollama_llm
+    if _ollama_llm is None:
+        _ollama_llm = ChatOllama(
+            model=settings.ollama_model,
+            base_url=settings.ollama_base_url,
+            temperature=0,
+        )
+    return _ollama_llm
 
 
 def _get_gemini_vision_llm() -> ChatGoogleGenerativeAI:
@@ -58,17 +74,17 @@ _IMAGE_SUMMARY_PROMPT = (
 
 
 def summarize_text(content: str) -> str:
-    
-    llm = _get_groq_llm()
+
+    llm = _get_ollama_llm()
     response = llm.invoke(_TEXT_SUMMARY_PROMPT.format(content=content))
-    return response.content.strip()
+    return _response_text(response.content)
 
 
 def summarize_table(table_html: str) -> str:
-    
-    llm = _get_groq_llm()
+
+    llm = _get_ollama_llm()
     response = llm.invoke(_TABLE_SUMMARY_PROMPT.format(content=table_html))
-    return response.content.strip()
+    return _response_text(response.content)
 
 
 def summarize_image(image_bytes: bytes, mime_type: str = "image/png") -> str:
@@ -87,4 +103,4 @@ def summarize_image(image_bytes: bytes, mime_type: str = "image/png") -> str:
         ]
     )
     response = llm.invoke([message])
-    return response.content.strip()
+    return _response_text(response.content)

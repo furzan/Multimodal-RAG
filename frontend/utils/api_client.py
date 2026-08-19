@@ -8,7 +8,6 @@ once.
 import os
 
 import requests
-import streamlit as st
 
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 
@@ -58,8 +57,6 @@ def chat(query: str, document_id: str | None = None, top_k: int = 5) -> dict:
     if document_id:
         payload["document_id"] = document_id
 
-    # Generation can be slow (multimodal LLM call over several images),
-    # so this timeout is generous relative to the other endpoints.
     response = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=120)
     return _handle_response(response)
 
@@ -70,14 +67,10 @@ def get_chunk_image_url(chunk_id: str) -> str:
 
 
 def check_backend_health() -> bool:
+    """Check if the backend is reachable. Called once per session."""
     try:
-        response = requests.get(f"{BACKEND_URL}/health", timeout=5)
-        return response.status_code == 200
+        r = requests.get(f"{BACKEND_URL}/health", timeout=5)
+        return r.status_code == 200
     except requests.RequestException:
         return False
 
-
-@st.cache_data(ttl=5)
-def cached_list_documents() -> list[dict]:
-    """Cached wrapper for polling document status without hammering the backend."""
-    return list_documents()

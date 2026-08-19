@@ -14,6 +14,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from dotenv import load_dotenv
+load_dotenv() 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

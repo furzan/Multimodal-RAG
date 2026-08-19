@@ -3,13 +3,12 @@ import logging
 from pathlib import Path
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
 from app.config import settings
 from app.core.retriever import RetrievedChunk
 from app.models.db_models import ChunkType
 logger = logging.getLogger(__name__)
 
-_generation_llm: ChatGoogleGenerativeAI | ChatGroq | None = None
+_generation_llm: ChatGoogleGenerativeAI | None = None
 
 
 def _get_generation_llm() -> ChatGoogleGenerativeAI:
@@ -80,6 +79,20 @@ def _build_context_message_content(chunks: list[RetrievedChunk]) -> list[dict]:
     return content
 
 
+def _response_text(content: str | list) -> str:
+    if isinstance(content, str):
+        return content.strip()
+
+    text_parts = []
+    for block in content:
+        if isinstance(block, str):
+            text_parts.append(block)
+        elif isinstance(block, dict) and isinstance(block.get("text"), str):
+            text_parts.append(block["text"])
+
+    return "".join(text_parts).strip()
+
+
 def generate_answer(query: str, chunks: list[RetrievedChunk]) -> str:
     
     if not chunks:
@@ -99,4 +112,4 @@ def generate_answer(query: str, chunks: list[RetrievedChunk]) -> str:
     ]
 
     response = llm.invoke(messages)
-    return response.content.strip()
+    return _response_text(response.content)

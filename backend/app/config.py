@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # --- Groq ---
     groq_api_key: str = ""
     groq_llm_model: str = "llama-3.3-70b-versatile"  
+    
+    # --- Ollama ---
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "gpt-oss:20b-cloud"
 
     # --- Google Gemini ---
     google_api_key: str = ""
