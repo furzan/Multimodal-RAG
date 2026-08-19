@@ -48,9 +48,14 @@ def ensure_index_exists() -> None:
 
 
 def get_index():
-    
-    pc = get_pinecone_client()
-    return pc.Index(settings.pinecone_index_name)
+    global _index
+    if _index is None:
+        pc = get_pinecone_client()
+        _index = pc.Index(settings.pinecone_index_name)
+    return _index
+
+
+_index = None
 
 
 def upsert_summary_vectors( items: list[dict],) -> None:

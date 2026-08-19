@@ -7,6 +7,7 @@ from app.api import routes_chat, routes_documents, routes_ingest
 from app.config import settings
 from app.models.db import init_db
 from app.stores.vector_store import ensure_index_exists
+from app.stores import semantic_cache
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -36,6 +37,13 @@ async def lifespan(app: FastAPI):
             )
     else:
         logger.warning("PINECONE_API_KEY not set — skipping Pinecone startup check.")
+
+    # Eagerly init Redis semantic cache so the first chat query is fast.
+    try:
+        semantic_cache.get_semantic_cache()
+        logger.info("Redis semantic cache initialized.")
+    except Exception:
+        logger.exception("Could not initialize semantic cache; will retry on first query.")
 
     yield
 

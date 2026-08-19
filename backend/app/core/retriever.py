@@ -16,6 +16,7 @@ class RetrievedChunk:
     score: float
     content_text: str | None
     content_path: str | None
+    summary: str | None = None
 
 
 def retrieve(db: Session, query: str, top_k: int = 5, document_id: str | None = None, ) -> list[RetrievedChunk]:
@@ -59,6 +60,7 @@ def retrieve(db: Session, query: str, top_k: int = 5, document_id: str | None = 
                 score=hit["score"],
                 content_text=chunk.content_text,
                 content_path=chunk.content_path,
+                summary=chunk.summary,
             )
         )
 

@@ -80,7 +80,7 @@ def add_text_chunk( db: Session, document_id: str, content_text: str, summary: s
         chunk_index=chunk_index,
     )
     db.add(chunk)
-    db.commit()
+    db.flush()
     db.refresh(chunk)
     return chunk
 
@@ -109,7 +109,7 @@ def add_image_chunk(db: Session, document_id: str, image_bytes: bytes, summary: 
     image_path.write_bytes(image_bytes)
 
     chunk.content_path = str(image_path)
-    db.commit()
+    db.flush()
     db.refresh(chunk)
     return chunk
 

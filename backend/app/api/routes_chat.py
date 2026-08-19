@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
@@ -31,9 +32,11 @@ def _preview_for_chunk(retrieved_chunk) -> RetrievedChunkPreview:
 
 
 @router.post("", response_model=ChatResponse)
-def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
+async def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
     
-    result = answer_query(
+    # Run the blocking LLM pipeline in a thread so the event loop stays free
+    result = await asyncio.to_thread(
+        answer_query,
         db,
         query=request.query,
         document_id=request.document_id,
